@@ -4,6 +4,9 @@ import sys
 
 pygame.init()  # pygame을 초기화합니다.
 pygame.mixer.init()
+frame_index = 0
+clock = pygame.time.Clock()
+animation_delay = 100
 
 # 화면 설정
 screen_width = 1400  # 화면 너비 설정
@@ -13,7 +16,7 @@ pygame.display.set_caption("test")
 
 # 화면 배경 이미지 로드
 background = pygame.image.load(
-    "assets/images/background_city1.png"
+    "assets/images/background/background_city1.png"
 )  # 배경 이미지 파일을 로드합니다.
 
 # 캐릭터 및 퀘스트 아이템 색상 설정
@@ -24,8 +27,9 @@ font = pygame.font.Font("assets/fonts/neodgm.ttf", 30)
 
 
 # 캐릭터 속성 설정
-char_width = 50  # 캐릭터 너비 설정
-char_height = 70  # 캐릭터 높이 설정
+
+char_width = 90  # 캐릭터 너비 설정
+char_height = 110  # 캐릭터 높이 설정
 char_x = 50  # 캐릭터 x 위치 설정
 char_y = screen_height / 2 - char_height / 2  # 캐릭터 y 위치 설정 (화면 중앙)
 char_speed = 7  # 캐릭터 이동 속도 설정
@@ -35,6 +39,24 @@ char_health = 30
 max_health = 30
 health_decrease_interval = 1000  # 체력이 감소할 시간 간격 (ms 단위, 여기서는 5초)
 last_health_decrease_time = pygame.time.get_ticks()  # 마지막으로 체력이 감소한 시간
+
+number_of_frames = 7
+
+# 캐릭터 이미지 불러오기
+character_frames = [
+    pygame.image.load(f"assets/images/character/1_frame_{i}.png")
+    for i in range(number_of_frames)
+]
+character_frames = [
+    pygame.transform.scale(frame, (char_width, char_height))
+    for frame in character_frames
+]
+
+frame_index = 0  # 현재 프레임의 인덱스
+animation_frame_count = 6  # 총 프레임 수
+animation_counter = 0  # 애니메이션 업데이트 카운터
+animation_delay = 6  # 애니메이션 업데이트 속도 (낮을수록 느림)
+
 
 # 퀘스트 아이템 속성 설정
 item_width = 50  # 퀘스트 아이템  너비 설정
@@ -234,11 +256,11 @@ def update_coins(coins):
     for coin in coins:
         coin.move()
         if coin.active:
-            check_collision(char_x, char_y, coin)
             coin.draw(screen)
+            check_collision(char_x, char_y, coin)
         else:
             coins.remove(coin)  # 비활성화된 코인은 리스트에서 제거
-            coins_score += coin.points  # 코인 점수 업데이트
+            # coins_score += coin.points  # 코인 점수 업데이트
 
 
 def settings_screen():
@@ -252,14 +274,18 @@ def shop_screen():
 
 
 def start_screen():
-    pygame.mixer.music.load("assets/sounds/lobby_music.mp3")  # 배경 음악 파일을 로드합니다.
+    pygame.mixer.music.load(
+        "assets/sounds/background/lobby_music.mp3"
+    )  # 배경 음악 파일을 로드합니다.
     pygame.mixer.music.play(-1)  # 무한 반복으로 음악을 재생합니다.
 
     while True:
+        # screen.blit(background, (0, 0))  # 배경 그리기
+        # pygame.draw.rect(
+        #     screen, char_color, (char_x, char_y, char_width, char_height)
+        # )  # 캐릭터 그리기
         screen.blit(background, (0, 0))  # 배경 그리기
-        pygame.draw.rect(
-            screen, char_color, (char_x, char_y, char_width, char_height)
-        )  # 캐릭터 그리기
+        screen.blit(character_frames[frame_index], (char_x, char_y))  # 현재 프레임 그리기
 
         start_text = font.render("Press SPACE to Start", True, (255, 255, 255))
         settings_text = font.render("Press S for Settings", True, (255, 255, 255))
@@ -318,8 +344,7 @@ def pause_screen():
 
 # 게임 실행 함수
 def main():
-    global char_y, score, last_health_decrease_time, char_health, coins, coins_score
-
+    global char_y, score, last_health_decrease_time, char_health, coins, coins_score, frame_index, animation_counter
     running = True  # 게임 실행 상태
     while running:
         for event in pygame.event.get():
@@ -349,11 +374,14 @@ def main():
 
         char_y = max(0, min(screen_height - char_height, char_y))  # 화면 경계 처리
 
-        # 배경 및 캐릭터 그리기
+        # # 배경 및 캐릭터 그리기
+        # screen.blit(background, (0, 0))  # 배경 그리기
+        # pygame.draw.rect(
+        #     screen, char_color, (char_x, char_y, char_width, char_height)
+        # )  # 캐릭터 그리기
+
         screen.blit(background, (0, 0))  # 배경 그리기
-        pygame.draw.rect(
-            screen, char_color, (char_x, char_y, char_width, char_height)
-        )  # 캐릭터 그리기
+        screen.blit(character_frames[frame_index], (char_x, char_y))  # 현재 프레임 그리기
 
         for quest in quests:  # 각 퀘스트 아이템에 대해
             quest.move()  # 이동
@@ -377,7 +405,6 @@ def main():
             else:
                 coins.remove(coin)  # 비활성화된 코인은 리스트에서 제거
                 coins_score += coin.points  # 코인 점수 업데이트
-
         update_quests(quests, coins)
 
         # 점수 화면에 표시
@@ -408,8 +435,14 @@ def main():
             print("Game Over!")
             running = False
 
+        animation_counter += 1
+        if animation_counter >= animation_delay:
+            frame_index = (frame_index + 1) % animation_frame_count
+            animation_counter = 0
+
         pygame.display.update()
 
+        clock.tick(60)
     pygame.quit()  # 게임 종료
 
 
