@@ -4,7 +4,9 @@ musics
 
     lobby_music : https://youtu.be/uIfD2BKaD2k
 
+    Game_over_music : https://youtu.be/br3OzOrARh4
 
 images
 
     background_city1 : https://wallpaperaccess.com/city-pixel-art
+

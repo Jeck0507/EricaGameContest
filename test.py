@@ -96,6 +96,23 @@ class Quest:
         pygame.draw.rect(screen, self.color, (self.x, self.y, item_width, item_height))
 
 
+class QuestProblem:
+    def __init__(self, problem_type, content, choices, correct_answer):
+        self.problem_type = problem_type  # 문제 유형 ('math', 'programming' 등)
+        self.content = content  # 문제 내용
+        self.choices = choices  # 가능한 답변의 목록
+        self.correct_answer = correct_answer  # 올바른 답변
+
+    def is_correct(self, user_answer):
+        """사용자의 답변이 올바른지 확인하는 메서드"""
+        return user_answer == self.correct_answer
+
+
+# 예제로 하나의 문제를 생성해볼까요?
+sample_problem = QuestProblem("math", "2 + 2 = ?", ["1", "2", "3", "4"], "4")
+sample_problem.content, sample_problem.is_correct("4")
+
+
 class Coin:
     def __init__(self, x, y, speed):
         self.color = (255, 255, 0)  # 코인 색상 (노란색)
@@ -129,10 +146,7 @@ coins = [
 
 
 # 퀘스트 시작 시 출력하는 함수
-
-
 def start_quest(quest_type):
-    global programming_score, math_score, mini_game_score
     messages = {
         "programming": "프로그래밍 퀘스트",
         "math": "수학 퀘스트",
@@ -141,87 +155,8 @@ def start_quest(quest_type):
     }
     print(messages.get(quest_type, "알 수 없는 퀘스트"))  # 퀘스트 유형에 따른 메시지 출력
 
-    choices = ["a", "b", "c", "d", "e"]
 
-    if quest_type == "math":
-        num1 = random.randint(1, 10)
-        num2 = random.randint(1, 10)
-        operation = random.choice(["+", "-", "*", "/"])
-        if operation == "+":
-            correct_answer = num1 + num2
-        elif operation == "-":
-            correct_answer = num1 - num2
-        elif operation == "*":
-            correct_answer = num1 * num2
-        else:
-            if num2 == 0:
-                correct_answer = "undefined"
-            else:
-                correct_answer = round(num1 / num2, 2)
-        question = f"{num1} {operation} {num2}"
-        options = [correct_answer] + [random.randint(1, 20) for _ in range(4)]
-        random.shuffle(options)
-
-    elif quest_type == "programming":
-        questions = [
-            ("Python에서 문자열의 길이를 얻으려면?", ["len", "size", "length", "count", "measure"]),
-            ("Python에서 리스트의 마지막 요소를?", ["pop", "push", "remove", "delete", "end"]),
-            (
-                "Python에서 for 반복문과 함께 사용되는 함수는?",
-                ["range", "loop", "repeat", "for", "times"],
-            ),
-        ]
-        question, options = random.choice(questions)
-        correct_answer = options[0]
-        random.shuffle(options)
-
-    elif quest_type == "mini_game":
-        questions = [
-            ("한국의 수도는?", ["서울", "부산", "대구", "대전", "광주"]),
-            ("피타고라스의 정리는?", ["c^2", "b^2", "a^2", "d^2", "e^2"]),
-            ("태양계에서 가장 큰 행성은?", ["목성", "금성", "지구", "화성", "토성"]),
-        ]
-        question, options = random.choice(questions)
-        correct_answer = options[0]
-        random.shuffle(options)
-
-    else:
-        return
-
-    # Display the question and choices on the pygame screen
-    question_text = font.render(question, True, (0, 0, 0))
-    screen.blit(question_text, (screen_width // 4, screen_height // 4))
-    for i, option in enumerate(options):
-        choice_text = font.render(f"{choices[i]}. {option}", True, (0, 0, 0))
-        screen.blit(choice_text, (screen_width // 4, screen_height // 4 + (i + 1) * 40))
-    pygame.display.update()
-
-    # Wait for the user to press one of the choice keys
-    selected_answer = None
-    while selected_answer not in choices:
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key in [
-                    pygame.K_a,
-                    pygame.K_b,
-                    pygame.K_c,
-                    pygame.K_d,
-                    pygame.K_e,
-                ]:
-                    selected_answer = choices[event.key - pygame.K_a]
-
-    if options[choices.index(selected_answer)] == correct_answer:
-        print("정답입니다!")
-        if quest_type == "math":
-            math_score += 10
-        elif quest_type == "programming":
-            programming_score += 10
-        elif quest_type == "mini_game":
-            mini_game_score += 10
-    else:
-        print("틀렸습니다.")
-
-
+# 캐릭터와 퀘스트 아이템 간의 충돌 확인 함수
 def check_collision(char_x, char_y, item):
     global score, programming_score, math_score, mini_game_score, coins_score
     if (
@@ -535,3 +470,4 @@ def main():
 if __name__ == "__main__":
     start_screen()
     main()  # 메인 함수 실행
+1

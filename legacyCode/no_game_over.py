@@ -20,7 +20,7 @@ background = pygame.image.load(
 )  # 배경 이미지 파일을 로드합니다.
 
 # 캐릭터 및 퀘스트 아이템 색상 설정
-char_color = (0, 128, 0)  # 캐릭터의 색상을 RGB로 설정합니다
+char_color = (0, 128, 0)  # 캐릭터의 색상을 RGB로 설정합니다.
 item_colors = [(255, 0, 0), (0, 0, 255), (255, 128, 0)]  # 퀘스트 아이템의 색상을 RGB
 # font = pygame.font.Font(None, 36)  # 글자 폰트 및 크기를 설정
 font = pygame.font.Font("assets/fonts/neodgm.ttf", 30)
@@ -37,7 +37,7 @@ char_speed = 7  # 캐릭터 이동 속도 설정
 # 캐릭터의 체력 설정 및 시간에 따른 체력 감소 변수 추가
 char_health = 30
 max_health = 30
-health_decrease_interval = 1000  # 체력이 감소할 시간 간격 (ms 단위, 여기서는 1초)
+health_decrease_interval = 1000  # 체력이 감소할 시간 간격 (ms 단위, 여기서는 5초)
 last_health_decrease_time = pygame.time.get_ticks()  # 마지막으로 체력이 감소한 시간
 
 number_of_frames = 7
@@ -129,10 +129,7 @@ coins = [
 
 
 # 퀘스트 시작 시 출력하는 함수
-
-
 def start_quest(quest_type):
-    global programming_score, math_score, mini_game_score
     messages = {
         "programming": "프로그래밍 퀘스트",
         "math": "수학 퀘스트",
@@ -141,87 +138,8 @@ def start_quest(quest_type):
     }
     print(messages.get(quest_type, "알 수 없는 퀘스트"))  # 퀘스트 유형에 따른 메시지 출력
 
-    choices = ["a", "b", "c", "d", "e"]
 
-    if quest_type == "math":
-        num1 = random.randint(1, 10)
-        num2 = random.randint(1, 10)
-        operation = random.choice(["+", "-", "*", "/"])
-        if operation == "+":
-            correct_answer = num1 + num2
-        elif operation == "-":
-            correct_answer = num1 - num2
-        elif operation == "*":
-            correct_answer = num1 * num2
-        else:
-            if num2 == 0:
-                correct_answer = "undefined"
-            else:
-                correct_answer = round(num1 / num2, 2)
-        question = f"{num1} {operation} {num2}"
-        options = [correct_answer] + [random.randint(1, 20) for _ in range(4)]
-        random.shuffle(options)
-
-    elif quest_type == "programming":
-        questions = [
-            ("Python에서 문자열의 길이를 얻으려면?", ["len", "size", "length", "count", "measure"]),
-            ("Python에서 리스트의 마지막 요소를?", ["pop", "push", "remove", "delete", "end"]),
-            (
-                "Python에서 for 반복문과 함께 사용되는 함수는?",
-                ["range", "loop", "repeat", "for", "times"],
-            ),
-        ]
-        question, options = random.choice(questions)
-        correct_answer = options[0]
-        random.shuffle(options)
-
-    elif quest_type == "mini_game":
-        questions = [
-            ("한국의 수도는?", ["서울", "부산", "대구", "대전", "광주"]),
-            ("피타고라스의 정리는?", ["c^2", "b^2", "a^2", "d^2", "e^2"]),
-            ("태양계에서 가장 큰 행성은?", ["목성", "금성", "지구", "화성", "토성"]),
-        ]
-        question, options = random.choice(questions)
-        correct_answer = options[0]
-        random.shuffle(options)
-
-    else:
-        return
-
-    # Display the question and choices on the pygame screen
-    question_text = font.render(question, True, (0, 0, 0))
-    screen.blit(question_text, (screen_width // 4, screen_height // 4))
-    for i, option in enumerate(options):
-        choice_text = font.render(f"{choices[i]}. {option}", True, (0, 0, 0))
-        screen.blit(choice_text, (screen_width // 4, screen_height // 4 + (i + 1) * 40))
-    pygame.display.update()
-
-    # Wait for the user to press one of the choice keys
-    selected_answer = None
-    while selected_answer not in choices:
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key in [
-                    pygame.K_a,
-                    pygame.K_b,
-                    pygame.K_c,
-                    pygame.K_d,
-                    pygame.K_e,
-                ]:
-                    selected_answer = choices[event.key - pygame.K_a]
-
-    if options[choices.index(selected_answer)] == correct_answer:
-        print("정답입니다!")
-        if quest_type == "math":
-            math_score += 10
-        elif quest_type == "programming":
-            programming_score += 10
-        elif quest_type == "mini_game":
-            mini_game_score += 10
-    else:
-        print("틀렸습니다.")
-
-
+# 캐릭터와 퀘스트 아이템 간의 충돌 확인 함수
 def check_collision(char_x, char_y, item):
     global score, programming_score, math_score, mini_game_score, coins_score
     if (
