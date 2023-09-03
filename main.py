@@ -35,8 +35,8 @@ char_y = screen_height / 2 - char_height / 2  # 캐릭터 y 위치 설정 (화�
 char_speed = 7  # 캐릭터 이동 속도 설정
 
 # 캐릭터의 체력 설정 및 시간에 따른 체력 감소 변수 추가
-char_health = 30
-max_health = 30
+char_health = 5
+max_health = 5
 health_decrease_interval = 1000  # 체력이 감소할 시간 간격 (ms 단위, 여기서는 1초)
 last_health_decrease_time = pygame.time.get_ticks()  # 마지막으로 체력이 감소한 시간
 
@@ -164,11 +164,21 @@ def start_quest(quest_type):
 
     elif quest_type == "programming":
         questions = [
-            ("Python에서 문자열의 길이를 얻으려면?", ["len", "size", "length", "count", "measure"]),
-            ("Python에서 리스트의 마지막 요소를?", ["pop", "push", "remove", "delete", "end"]),
+            (
+                "Python에서 문자열의 길이를 얻으기 위해 사용하는 함수는?",
+                ["len", "size", "length", "count", "measure"],
+            ),
+            (
+                "Python에서 리스트의 마지막 요소를 얻기 위해 사용하는 함수는?",
+                ["pop", "push", "remove", "delete", "end"],
+            ),
             (
                 "Python에서 for 반복문과 함께 사용되는 함수는?",
                 ["range", "loop", "repeat", "for", "times"],
+            ),
+            (
+                "Python의 머신러닝 라이브러리를 고르시오",
+                ["skiet_learn", "pygame", "random", "jango", "flask"],
             ),
         ]
         question, options = random.choice(questions)
@@ -177,7 +187,7 @@ def start_quest(quest_type):
 
     elif quest_type == "mini_game":
         questions = [
-            ("한국의 수도는?", ["서울", "부산", "대구", "대전", "광주"]),
+            ("대한민국의 수도는 어디에 위치하고 있습니까?", ["서울", "부산", "대구", "대전", "광주"]),
             ("피타고라스의 정리는?", ["c^2", "b^2", "a^2", "d^2", "e^2"]),
             ("태양계에서 가장 큰 행성은?", ["목성", "금성", "지구", "화성", "토성"]),
         ]
@@ -366,10 +376,6 @@ def start_screen():
     pygame.mixer.music.play(-1)  # 무한 반복으로 음악을 재생합니다.
 
     while True:
-        # screen.blit(background, (0, 0))  # 배경 그리기
-        # pygame.draw.rect(
-        #     screen, char_color, (char_x, char_y, char_width, char_height)
-        # )  # 캐릭터 그리기
         screen.blit(background, (0, 0))  # 배경 그리기
         screen.blit(character_frames[frame_index], (char_x, char_y))  # 현재 프레임 그리기
 
@@ -408,9 +414,7 @@ def start_screen():
 def pause_screen():
     pygame.mixer.music.pause()
     screen.blit(background, (0, 0))  # 배경 그리기
-    pygame.draw.rect(
-        screen, char_color, (char_x, char_y, char_width, char_height)
-    )  # 캐릭터 그리기
+
     start_text = font.render("Press SPACE to Start", True, (255, 255, 255))
     screen.blit(
         start_text,
@@ -428,11 +432,105 @@ def pause_screen():
                     waiting = False  # ESC 키를 누르면 일시 중지 종료
 
 
+def game_over_screen():
+    pygame.mixer.music.load(
+        "assets/sounds/GameOver/Game_over_music.mp3"
+    )  # 게임 오버 음악 파일을 로드합니다.
+    pygame.mixer.music.play(-1)  # 무한 반복으로 음악을 재생합니다.
+
+    game_over_text = font.render("Game Over", True, (255, 0, 0))
+    retry_text = font.render("Press SPACE to Retry", True, (255, 255, 255))
+
+    while True:
+        screen.blit(background, (0, 0))  # 배경 그리기
+        screen.blit(
+            game_over_text,
+            (
+                screen_width // 2 - game_over_text.get_width() // 2,
+                screen_height // 2 - 40,
+            ),
+        )
+        screen.blit(
+            retry_text,
+            (screen_width // 2 - retry_text.get_width() // 2, screen_height // 2),
+        )
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return  # 게임 다시 시작
+
+
+def reset_game_variables():
+    global char_y, score, last_health_decrease_time, char_health, coins, coins_score, frame_index, animation_counter, programming_score, math_score, mini_game_score
+    char_y = screen_height / 2 - char_height / 2
+    score = 0
+    last_health_decrease_time = pygame.time.get_ticks()
+    char_health = max_health
+    coins = [
+        Coin(
+            screen_width + random.randint(50, 300),
+            random.randint(0, screen_height - item_height),
+            item_speed,
+        )
+    ]
+    # coins_score = 0
+    frame_index = 0
+    animation_counter = 0
+    programming_score = 0
+
+
+def restart_game():
+    reset_game_variables()
+    start_screen()
+
+
+def game_over_screen():
+    pygame.mixer.music.load("assets/sounds/GameOver/Game_over_music.mp3")
+    pygame.mixer.music.play(-1)
+
+    game_over_text = font.render("Game Over", True, (255, 0, 0))
+    retry_text = font.render("Press SPACE to Retry", True, (255, 255, 255))
+
+    while True:
+        screen.blit(background, (0, 0))
+        screen.blit(
+            game_over_text,
+            (
+                screen_width // 2 - game_over_text.get_width() // 2,
+                screen_height // 2 - 40,
+            ),
+        )
+        screen.blit(
+            retry_text,
+            (screen_width // 2 - retry_text.get_width() // 2, screen_height // 2),
+        )
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return  # 게임 다시 시작
+
+
 # 게임 실행 함수
 def main():
     global char_y, score, last_health_decrease_time, char_health, coins, coins_score, frame_index, animation_counter
     running = True  # 게임 실행 상태
     while running:
+        if char_health <= 0:
+            print("Game Over!")
+            game_over_screen()
+            reset_game_variables()
+            start_screen()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  # 창 닫기 이벤트 발생 시
                 running = False  # 게임 종료
@@ -459,12 +557,6 @@ def main():
             char_y += char_speed  # 아래로 이동
 
         char_y = max(0, min(screen_height - char_height, char_y))  # 화면 경계 처리
-
-        # # 배경 및 캐릭터 그리기
-        # screen.blit(background, (0, 0))  # 배경 그리기
-        # pygame.draw.rect(
-        #     screen, char_color, (char_x, char_y, char_width, char_height)
-        # )  # 캐릭터 그리기
 
         screen.blit(background, (0, 0))  # 배경 그리기
         screen.blit(character_frames[frame_index], (char_x, char_y))  # 현재 프레임 그리기
@@ -517,9 +609,9 @@ def main():
 
         coins_text = font.render(f"Coins Score: {coins_score}", True, (0, 0, 0))
         screen.blit(coins_text, (10, 170))  # 화면에 코인 점수 표시
-        if char_health <= 0:
-            print("Game Over!")
-            running = False
+        # if char_health <= 0:
+        #     print("Game Over!")
+        #     # running = False
 
         animation_counter += 1
         if animation_counter >= animation_delay:
