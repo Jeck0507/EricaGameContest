@@ -20,9 +20,8 @@ background = pygame.image.load(
 )  # 배경 이미지 파일을 로드합니다.
 
 # 캐릭터 및 퀘스트 아이템 색상 설정
-char_color = (0, 128, 0)  # 캐릭터의 색상을 RGB로 설정합니다
-item_colors = [(255, 0, 0), (0, 0, 255), (255, 128, 0)]  # 퀘스트 아이템의 색상을 RGB
-# font = pygame.font.Font(None, 36)  # 글자 폰트 및 크기를 설정
+char_color = (0, 128, 0)  # 캐릭터의 색상을 RGB로 설정
+item_colors = [(255, 0, 0), (0, 0, 255), (255, 128, 0)]  # 퀘스트 아이템의 색상을 RGB로 섲어
 font = pygame.font.Font("assets/fonts/neodgm.ttf", 30)
 
 
@@ -35,8 +34,8 @@ char_y = screen_height / 2 - char_height / 2  # 캐릭터 y 위치 설정 (화�
 char_speed = 7  # 캐릭터 이동 속도 설정
 
 # 캐릭터의 체력 설정 및 시간에 따른 체력 감소 변수 추가
-char_health = 5
-max_health = 5
+char_health = 20
+max_health = 20
 health_decrease_interval = 1000  # 체력이 감소할 시간 간격 (ms 단위, 여기서는 1초)
 last_health_decrease_time = pygame.time.get_ticks()  # 마지막으로 체력이 감소한 시간
 
@@ -67,11 +66,13 @@ item_speed = 8  # 퀘스트 아이템 이동 속도 설정
 score = 0  # 전체 점수 초기화
 programming_score = 0  # 프로그래밍 점수 초기화
 math_score = 0  # 수학 점수 초기화
-mini_game_score = 0  # 미니게임 점수 초기화
+science_score = 0  # 미니게임 점수 초기화
 coins_score = 0  # 미니게임 점수 초기화
 
 
 # 퀘스트 클래스 정의
+
+
 class Quest:
     def __init__(self, quest_type, color, x, y, speed):
         # 퀘스트 아이템 속성 초기화
@@ -84,6 +85,13 @@ class Quest:
         self.collided = False  # 충돌 상태
         self.points = 1  # 점수 (기본 1점)
 
+        if quest_type == "programming":
+            self.image = pygame.image.load("assets/images/items/computer.png")
+        elif quest_type == "math":
+            self.image = pygame.image.load("assets/images/items/math.jpeg")
+        elif quest_type == "science":
+            self.image = pygame.image.load("assets/images/items/science.png")
+
     def move(self):
         # 퀘스트 아이템 이동 메서드
         if self.active:
@@ -93,7 +101,8 @@ class Quest:
 
     def draw(self, screen):
         # 퀘스트 아이템을 화면에 그리는 메서드
-        pygame.draw.rect(screen, self.color, (self.x, self.y, item_width, item_height))
+        if self.active:
+            screen.blit(self.image, (self.x, self.y))
 
 
 class Coin:
@@ -132,11 +141,11 @@ coins = [
 
 
 def start_quest(quest_type):
-    global programming_score, math_score, mini_game_score
+    global programming_score, math_score, science_score
     messages = {
         "programming": "프로그래밍 퀘스트",
         "math": "수학 퀘스트",
-        "mini_game": "미니게임 퀘스트",
+        "science": "과학 상식 퀘스트",
         "coin": "코인 획득",
     }
     print(messages.get(quest_type, "알 수 없는 퀘스트"))  # 퀘스트 유형에 따른 메시지 출력
@@ -144,22 +153,32 @@ def start_quest(quest_type):
     choices = ["a", "b", "c", "d", "e"]
 
     if quest_type == "math":
-        num1 = random.randint(1, 10)
-        num2 = random.randint(1, 10)
-        operation = random.choice(["+", "-", "*", "/"])
-        if operation == "+":
-            correct_answer = num1 + num2
-        elif operation == "-":
-            correct_answer = num1 - num2
-        elif operation == "*":
-            correct_answer = num1 * num2
-        else:
-            if num2 == 0:
-                correct_answer = "undefined"
-            else:
-                correct_answer = round(num1 / num2, 2)
-        question = f"{num1} {operation} {num2}"
-        options = [correct_answer] + [random.randint(1, 20) for _ in range(4)]
+        questions = [
+            (
+                "1부터 100까지의 정수 중 7의 배수의 합은?",
+                ["735", "504", "874", "946", "271"],
+            ),
+            (
+                "2x + 3y = 27,. 7x - 4y = 22 일 때, x,y의 값은?",
+                [
+                    "x = 6, y = 5",
+                    "x = 4, y = 3",
+                    "x = 5, y = 2",
+                    "x = 3, y = 6",
+                    "x = 5, y = 6",
+                ],
+            ),
+            (
+                "576과 168의 최대공약수는?",
+                ["24", "28", "36", "46", "52"],
+            ),
+            (
+                "3개의 동전을 던질 때 모두 앞면이 나올 확률은?",
+                ["1/8", "1/64", "1/6", "1/18", "8/1"],
+            ),
+        ]
+        question, options = random.choice(questions)
+        correct_answer = options[0]
         random.shuffle(options)
 
     elif quest_type == "programming":
@@ -185,10 +204,16 @@ def start_quest(quest_type):
         correct_answer = options[0]
         random.shuffle(options)
 
-    elif quest_type == "mini_game":
+    elif quest_type == "science":
         questions = [
-            ("대한민국의 수도는 어디에 위치하고 있습니까?", ["서울", "부산", "대구", "대전", "광주"]),
-            ("피타고라스의 정리는?", ["c^2", "b^2", "a^2", "d^2", "e^2"]),
+            (
+                "절대온도 0K에 근접할 때 시스템의 무질서 또는 엔트로피가 최소화된다는 법칙은?",
+                ["열역학 제 3법칙", "관성의 법칙", "특수 상대성이론", "가속도의 법칙", "열역학 제 2법칙"],
+            ),
+            (
+                "뉴턴 운동 법칙의 식은?",
+                ["F = ma", "E = mc^2", "a^2 + b^2 = c^2", "1/2 * m * h ", "I = BS"],
+            ),
             ("태양계에서 가장 큰 행성은?", ["목성", "금성", "지구", "화성", "토성"]),
         ]
         question, options = random.choice(questions)
@@ -226,14 +251,14 @@ def start_quest(quest_type):
             math_score += 10
         elif quest_type == "programming":
             programming_score += 10
-        elif quest_type == "mini_game":
-            mini_game_score += 10
+        elif quest_type == "science":
+            science_score += 10
     else:
         print("틀렸습니다.")
 
 
 def check_collision(char_x, char_y, item):
-    global score, programming_score, math_score, mini_game_score, coins_score
+    global score, programming_score, math_score, science_score, coins_score
     if (
         item.active
         and (char_x < item.x + item_width)
@@ -247,8 +272,8 @@ def check_collision(char_x, char_y, item):
             programming_score += item.points
         elif item.type == "math":
             math_score += item.points
-        elif item.type == "mini_game":
-            mini_game_score += item.points
+        elif item.type == "science":
+            science_score += item.points
         elif item.type == "coin":  # 코인 유형 처리
             coins_score += item.points
             item.active = False  # 코인을 먹었으므로 비활성화
@@ -290,7 +315,7 @@ quests = [
         item_speed,
     ),
     Quest(
-        "mini_game",
+        "science",
         item_colors[2],
         screen_width + random.randint(400, 600),
         random.randint(0, screen_height - item_height),
@@ -307,6 +332,7 @@ class Obstacle:
         self.y = y
         self.speed = speed
         self.active = True
+        self.image = pygame.image.load("assets/images/items/obs.png")
 
     def move(self):
         if self.active:
@@ -315,7 +341,8 @@ class Obstacle:
                 self.active = False
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, (self.x, self.y, item_width, item_height))
+        if self.active:
+            screen.blit(self.image, (self.x, self.y))
 
 
 def check_obstacle_collision(char_x, char_y, obstacle):
@@ -379,9 +406,9 @@ def start_screen():
         screen.blit(background, (0, 0))  # 배경 그리기
         screen.blit(character_frames[frame_index], (char_x, char_y))  # 현재 프레임 그리기
 
-        start_text = font.render("Press SPACE to Start", True, (255, 255, 255))
-        settings_text = font.render("Press S for Settings", True, (255, 255, 255))
-        shop_text = font.render("한국어 폰트 테스트", True, (255, 255, 255))
+        start_text = font.render("Press SPACE to Start", True, (0, 0, 0))
+        settings_text = font.render("Press S for Settings", True, (0, 0, 0))
+        shop_text = font.render("상점으로 이동하기", True, (0, 0, 0))
 
         screen.blit(
             start_text,
@@ -466,7 +493,7 @@ def game_over_screen():
 
 
 def reset_game_variables():
-    global char_y, score, last_health_decrease_time, char_health, coins, coins_score, frame_index, animation_counter, programming_score, math_score, mini_game_score
+    global char_y, score, last_health_decrease_time, char_health, coins, coins_score, frame_index, animation_counter, programming_score, math_score, science_score
     char_y = screen_height / 2 - char_height / 2
     score = 0
     last_health_decrease_time = pygame.time.get_ticks()
@@ -478,10 +505,12 @@ def reset_game_variables():
             item_speed,
         )
     ]
-    # coins_score = 0
+    coins_score = 0
     frame_index = 0
     animation_counter = 0
-    programming_score = 0
+    programming_score = 0  # 프로그래밍 점수 초기화
+    math_score = 0  # 수학 점수 초기화
+    science_score = 0  # 미니게임 점수 초기화
 
 
 def restart_game():
@@ -492,6 +521,10 @@ def restart_game():
 def game_over_screen():
     pygame.mixer.music.load("assets/sounds/GameOver/Game_over_music.mp3")
     pygame.mixer.music.play(-1)
+    screen.fill((0, 0, 0))
+
+    game_over_text = font.render("Game Over", True, (255, 0, 0))
+    retry_text = font.render("Press SPACE to Retry", True, (255, 255, 255))
 
     game_over_text = font.render("Game Over", True, (255, 0, 0))
     retry_text = font.render("Press SPACE to Retry", True, (255, 255, 255))
@@ -520,6 +553,46 @@ def game_over_screen():
                     return  # 게임 다시 시작
 
 
+def show_ending_image():
+    global programming_score, math_score, science_score, coins_score
+    ending_image = None
+
+    print("Programming Score:", programming_score)
+    print("Math Score:", math_score)
+    print("science Score:", science_score)
+
+    if programming_score > math_score and programming_score > science_score:
+        ending_image_path = "assets/images/endings/programer.png"
+        print("programer")
+    elif math_score > programming_score and math_score > science_score:
+        ending_image_path = "assets/images/endings/math.png"
+        print("math")
+    elif science_score > programming_score and science_score > math_score:
+        ending_image_path = "assets/images/endings/science.pngg"
+        print("science")
+    elif science_score == 0 and programming_score == 0 and math_score == 0:
+        list_lotto = [1, 1, 1, 1, 1, 1, 1, 0]
+        choicelist = random.choice(list_lotto)
+        if choicelist == 0:
+            ending_image_path = "assets/images/endings/lotto.png"
+        else:
+            ending_image_path = "assets/images/endings/die.png"
+    else:
+        list_rand_ending = [0, 1]
+        choice_ending_list = random.choice(list_rand_ending)
+        if choice_ending_list == 1:
+            ending_image_path = "assets/images/endings/rand1.png"
+        elif choice_ending_list == 0:
+            ending_image_path = "assets/images/endings/rand2.png"
+
+        print("defualt")
+
+    ending_image = pygame.image.load(ending_image_path)
+    screen.blit(ending_image, (0, 0))
+    pygame.display.update()
+    pygame.time.wait(3000)
+
+
 # 게임 실행 함수
 def main():
     global char_y, score, last_health_decrease_time, char_health, coins, coins_score, frame_index, animation_counter
@@ -528,7 +601,9 @@ def main():
         if char_health <= 0:
             print("Game Over!")
             game_over_screen()
+            show_ending_image()
             reset_game_variables()
+
             start_screen()
 
         for event in pygame.event.get():
@@ -594,24 +669,14 @@ def main():
         math_text = font.render(f"Math Score: {math_score}", True, (0, 0, 0))
         screen.blit(math_text, (10, 90))
 
-        mini_game_text = font.render(
-            f"Mini Game Score: {mini_game_score}", True, (0, 0, 0)
-        )
-        screen.blit(mini_game_text, (10, 130))
-
-        mini_game_text = font.render(
-            f"Mini Game Score: {mini_game_score}", True, (0, 0, 0)
-        )
-        screen.blit(mini_game_text, (10, 130))
+        science_text = font.render(f"science Score: {science_score}", True, (0, 0, 0))
+        screen.blit(science_text, (10, 130))
 
         health_text = font.render(f"Health: {'0' * char_health}", True, (0, 0, 0))
         screen.blit(health_text, (10, 10))
 
         coins_text = font.render(f"Coins Score: {coins_score}", True, (0, 0, 0))
-        screen.blit(coins_text, (10, 170))  # 화면에 코인 점수 표시
-        # if char_health <= 0:
-        #     print("Game Over!")
-        #     # running = False
+        screen.blit(coins_text, (10, 170))
 
         animation_counter += 1
         if animation_counter >= animation_delay:

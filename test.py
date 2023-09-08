@@ -93,7 +93,8 @@ class Quest:
 
     def draw(self, screen):
         # 퀘스트 아이템을 화면에 그리는 메서드
-        pygame.draw.rect(screen, self.color, (self.x, self.y, item_width, item_height))
+        if self.active:
+            screen.blit(self.image, (self.x, self.y))
 
 
 class Coin:
